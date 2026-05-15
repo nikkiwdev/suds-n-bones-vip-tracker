@@ -59,12 +59,14 @@ const fmt = (s) => (s || "").trim().toLowerCase();
 
 const inp = {
   background: "#061414", border: "1px solid #1a3333", borderRadius: 8,
-  color: "#e0fffe", fontSize: 14, padding: "8px 12px", outline: "none",
+  color: "#e0fffe", fontSize: 16, padding: "8px 12px", outline: "none",
   width: "100%", boxSizing: "border-box", fontFamily: "system-ui,sans-serif",
 };
 
-const TYPE_COLORS = { FH: "#4edee4", MT: "#f0a500", BB: "#a78bfa" };
-const TYPE_BG    = { FH: "#0cc0df22", MT: "#f0a50022", BB: "#a78bfa22" };
+const TYPE_COLORS    = { FH: "#4edee4", MT: "#f0a500", BB: "#a78bfa" };
+const TYPE_PUNCHED   = { FH: "#4edee4", MT: "#00e676", BB: "#a78bfa" };  // green for MT when punched
+const TYPE_BG        = { FH: "#0cc0df22", MT: "#00e67622", BB: "#a78bfa22" };
+const FREE_COLOR     = "#ff6ec7";  // pink for free slots
 
 // ── Bath Punch Slot ───────────────────────────────────────────────────────────
 function BathSlot({ slot, idx, onChange }) {
@@ -75,23 +77,23 @@ function BathSlot({ slot, idx, onChange }) {
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10,
-      background: isFree ? (filled ? "linear-gradient(135deg,#0cc0df,#4edee4)" : "#1a3a3a") : (filled ? "#0a2e2e" : "#0a1a1a"),
-      border: "1px solid " + (isFree ? (filled ? "#4edee455" : "#0cc0df55") : (filled ? "#0cc0df44" : "#0f2626")),
+      background: isFree ? (filled ? `linear-gradient(135deg,${FREE_COLOR}cc,${FREE_COLOR}88)` : "#1a3a3a") : (filled ? "#0a2e2e" : "#0a1a1a"),
+      border: "1px solid " + (isFree ? (filled ? FREE_COLOR + "88" : FREE_COLOR + "44") : (filled ? "#0cc0df44" : "#0f2626")),
     }}>
       <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
         background: isFree ? (filled ? "rgba(0,0,0,0.2)" : "#0cc0df22") : (filled ? "#0cc0df22" : "#1a2e2e"),
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        {filled ? <span style={{ fontSize: 12, color: isFree ? "#000" : "#4edee4" }}>✓</span>
-          : isFree ? <span style={{ fontSize: 10, fontWeight: 800, color: "#4edee4" }}>★</span>
-          : <span style={{ fontSize: 10, color: "#6ababa", fontWeight: 700, fontFamily: "monospace" }}>{idx + 1}</span>}
+        {filled ? <span style={{ fontSize: 13, color: "#fff", fontWeight: 900 }}>✓</span>
+          : isFree ? <span style={{ fontSize: 11, fontWeight: 900, color: FREE_COLOR }}>★</span>
+          : <span style={{ fontSize: 11, color: "#6ababa", fontWeight: 800, fontFamily: "monospace" }}>{idx + 1}</span>}
       </div>
-      <span style={{ fontSize: 11, fontWeight: isFree ? 800 : 600, flex: 1,
-        color: isFree ? (filled ? "#000" : "#4edee4") : (filled ? "#5de7ed" : "#7acaca"),
+      <span style={{ fontSize: 13, fontWeight: isFree ? 900 : 700, flex: 1,
+        color: isFree ? (filled ? "#fff" : FREE_COLOR) : (filled ? "#5de7ed" : "#8ad8d8"),
         fontFamily: "monospace", letterSpacing: 0.5, textTransform: "uppercase",
       }}>{slot.label}</span>
       {filled
-        ? <span style={{ fontSize: 11, color: isFree ? "#00000099" : "#5de7ed88", fontFamily: "monospace" }}>{slot.date}</span>
+        ? <span style={{ fontSize: 11, color: isFree ? "#ffffff99" : "#5de7edbb", fontFamily: "monospace", fontWeight: 700 }}>{slot.date}</span>
         : <input ref={dateRef} type="date" defaultValue={today()} style={{ background: "transparent", border: "none", color: "#7acaca", fontSize: 10, fontFamily: "monospace", outline: "none", width: 100, cursor: "pointer" }} />
       }
       {!filled
@@ -108,8 +110,9 @@ function GroomSlot({ slot, idx, onChange, freeType }) {
   const [selType, setSelType] = useState("FH");
   const filled = !!slot.date;
   const isFree = !!slot.isFree;
-  const tc = TYPE_COLORS[slot.type] || TYPE_COLORS[freeType] || "#4edee4";
-  const tb = TYPE_BG[slot.type] || "#0cc0df22";
+  const tc = filled ? (TYPE_PUNCHED[slot.type] || TYPE_PUNCHED[freeType] || "#4edee4") : (TYPE_COLORS[slot.type] || TYPE_COLORS[freeType] || "#4edee4");
+  const freeColor = FREE_COLOR;
+  const tb = filled ? (TYPE_BG[slot.type] || "#00e67622") : "#0a1a1a";
 
   const punch = () => {
     const t = isFree ? freeType : selType;
@@ -119,16 +122,16 @@ function GroomSlot({ slot, idx, onChange, freeType }) {
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10,
-      background: isFree ? (filled ? `linear-gradient(135deg,${tc}cc,${tc}88)` : "#1a3a3a") : (filled ? tb : "#0a1a1a"),
-      border: "1px solid " + (isFree ? tc + "66" : (filled ? tc + "44" : "#0f2626")),
+      background: isFree ? (filled ? `linear-gradient(135deg,${freeColor}cc,${freeColor}88)` : "#1a3a3a") : (filled ? tb : "#0a1a1a"),
+      border: "1px solid " + (isFree ? (filled ? freeColor + "88" : freeColor + "44") : (filled ? tc + "55" : "#0f2626")),
     }}>
       <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
         background: filled ? tc + "33" : "#1a2e2e",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        {filled ? <span style={{ fontSize: 12, color: isFree ? "#fff" : tc }}>✓</span>
-          : isFree ? <span style={{ fontSize: 10, fontWeight: 800, color: "#4edee4" }}>★</span>
-          : <span style={{ fontSize: 10, color: "#6ababa", fontWeight: 700, fontFamily: "monospace" }}>{idx + 1}</span>}
+        {filled ? <span style={{ fontSize: 13, color: isFree ? "#fff" : tc, fontWeight: 900 }}>✓</span>
+          : isFree ? <span style={{ fontSize: 11, fontWeight: 900, color: freeColor }}>★</span>
+          : <span style={{ fontSize: 11, color: "#6ababa", fontWeight: 800, fontFamily: "monospace" }}>{idx + 1}</span>}
       </div>
 
       <span style={{ fontSize: 11, fontWeight: isFree ? 800 : 600, flex: 1,
@@ -215,8 +218,8 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
                 placeholder="Pet name..."
                 style={{ background: "#061414", border: "1px solid #0cc0df", borderRadius: 6, color: "#fff", fontSize: 14, fontWeight: 700, padding: "3px 10px", outline: "none", fontFamily: "system-ui,sans-serif" }} />
             : <div>
-                <span onClick={() => setEditName(true)} style={{ fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "system-ui,sans-serif", borderBottom: "1px dashed #2a5555" }}>{pet.name || "TAP TO NAME PET"}</span>
-                {pet.breed && <span style={{ marginLeft: 8, fontSize: 10, color: "#6ababa", fontFamily: "monospace" }}>{pet.breed}</span>}
+                <span onClick={() => setEditName(true)} style={{ fontSize: 17, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "system-ui,sans-serif", borderBottom: "1px dashed #2a5555" }}>{pet.name || "TAP TO NAME PET"}</span>
+                {pet.breed && <span style={{ marginLeft: 8, fontSize: 12, color: "#6ababa", fontFamily: "monospace" }}>{pet.breed}</span>}
               </div>
           }
           {bathFree && <span title="Free Bath Earned!">🛁✨</span>}
@@ -233,7 +236,7 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
               NEW CYCLE
             </button>
           )}
-          <span style={{ fontSize: 10, color: "#6ababa", fontFamily: "monospace" }}>🛁{bathF}/4 · ✂️{groomF}/8</span>
+          <span style={{ fontSize: 12, color: "#6ababa", fontFamily: "monospace" }}>🛁{bathF}/4 · ✂️{groomF}/8</span>
           {!isOnly && <button onClick={onRemove} style={{ background: "transparent", border: "none", color: "#4a8a8a", cursor: "pointer", fontSize: 15 }}>✕</button>}
         </div>
       </div>
@@ -257,7 +260,7 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
       <div style={{ padding: "8px 16px 0", display: "flex", gap: 12 }}>
         {[{ label: "Bath", pct: bathPct, free: bathFree }, { label: "Groom", pct: groomPct, free: groomFree }].map(({ label, pct, free }) => (
           <div key={label} style={{ flex: 1 }}>
-            <div style={{ fontSize: 9, color: "#6ababa", fontFamily: "monospace", marginBottom: 3, letterSpacing: 1 }}>{label.toUpperCase()} PROGRESS {pct}%</div>
+            <div style={{ fontSize: 11, color: "#6ababa", fontFamily: "monospace", marginBottom: 3, letterSpacing: 1 }}>{label.toUpperCase()} PROGRESS {pct}%</div>
             <div style={{ height: 4, background: "#0a1e1e", borderRadius: 4, overflow: "hidden" }}>
               <div style={{ height: "100%", width: pct + "%", background: free ? "linear-gradient(90deg,#0cc0df,#4edee4)" : "linear-gradient(90deg,#0cc0df88,#4edee488)", borderRadius: 4, transition: "width 0.4s ease" }} />
             </div>
@@ -268,7 +271,7 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
       {/* Punch columns */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
         <div style={{ padding: "10px 12px", borderRight: "1px solid #0f2626" }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: "#0cc0df", fontWeight: 800, marginBottom: 6, fontFamily: "monospace" }}>🛁 BATH / BB CARD</div>
+          <div style={{ fontSize: 13, letterSpacing: 2, color: "#0cc0df", fontWeight: 900, marginBottom: 6, fontFamily: "monospace" }}>🛁 BATH / BB CARD</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {pet.card.baths.map((slot, i) => <BathSlot key={i} slot={slot} idx={i} onChange={v => punchBath(i, v)} />)}
           </div>
@@ -312,22 +315,22 @@ function ClientDetail({ client, onUpdate, onBack, onDelete }) {
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flex: 1, minWidth: 0 }}>
             <div style={{ flex: 1, minWidth: 150 }}>
-              <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>CLIENT NAME</label>
+              <label style={{ fontSize: 11, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>CLIENT NAME</label>
               <input value={c.name} onChange={e => push({ ...c, name: e.target.value })} placeholder="Full Name" style={inp} />
             </div>
             <div style={{ flex: 1, minWidth: 130 }}>
-              <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>PHONE</label>
+              <label style={{ fontSize: 11, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>PHONE</label>
               <input value={c.phone} onChange={e => push({ ...c, phone: e.target.value })} placeholder="(555) 000-0000" style={inp} />
             </div>
             <div style={{ minWidth: 150 }}>
-              <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBER SINCE</label>
+              <label style={{ fontSize: 11, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBER SINCE</label>
               <input type="date" value={memberSince} onChange={e => push({ ...c, memberSince: e.target.value })}
                 style={{ ...inp, color: "#e0fffe" }} />
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
   
-            <span style={{ fontSize: 11, color: "#0cc0df", fontFamily: "monospace" }}>{total} punches total</span>
+            <span style={{ fontSize: 13, color: "#0cc0df", fontFamily: "monospace" }}>{total} punches total</span>
             {!confirmDelete ? (
               <button onClick={() => setConfirmDelete(true)} style={{ background: "#1a0808", border: "1px solid #3a1515", color: "#c05050", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 10, fontFamily: "monospace", letterSpacing: 1 }}>ARCHIVE</button>
             ) : (
@@ -354,7 +357,7 @@ function ClientDetail({ client, onUpdate, onBack, onDelete }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#061a1a,#030f0f)", border: "1px solid #0cc0df44", borderRadius: 30, padding: "6px 16px" }}>
           <img src={LOGO_SRC} alt="SNB" style={{ width: 28, height: 28, objectFit: "contain" }} />
-          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 3, color: "#4edee4", fontFamily: "monospace" }}>VIP PUNCH CARD</span>
+          <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: 3, color: "#4edee4", fontFamily: "monospace" }}>VIP PUNCH CARD</span>
         </div>
         <button onClick={addPet} style={{ background: "#061a1a", border: "1px solid #0cc0df44", color: "#4edee4", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontFamily: "monospace", letterSpacing: 1 }}>+ ADD PET</button>
       </div>
@@ -417,7 +420,7 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <img src={LOGO_SRC} alt="SNB" style={{ width: 44, height: 44, objectFit: "contain" }} />
           <div>
-            <div style={{ fontSize: 17, fontWeight: 900, letterSpacing: 1, fontFamily: "monospace", background: "linear-gradient(90deg,#4edee4,#0cc0df)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>SUDS N&#39; BONES</div>
+            <div style={{ fontSize: 19, fontWeight: 900, letterSpacing: 1, fontFamily: "monospace", background: "linear-gradient(90deg,#4edee4,#0cc0df)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>SUDS N&#39; BONES</div>
             <div style={{ fontSize: 9, color: "#6ababa", fontFamily: "monospace", letterSpacing: 3 }}>GROOMING PARLOR · VIP TRACKER</div>
           </div>
         </div>
@@ -438,23 +441,23 @@ export default function App() {
             <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
               <div style={{ flex: 1, position: "relative" }}>
                 <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#6ababa" }}>🔍</span>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by client, phone, pet name, or breed..." style={{ ...inp, paddingLeft: 36, fontSize: 13, background: "#060f0f" }} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by client, phone, pet name, or breed..." style={{ ...inp, paddingLeft: 36, fontSize: 15, background: "#060f0f" }} />
               </div>
-              <button onClick={() => setAdding(true)} style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 10, padding: "0 20px", cursor: "pointer", fontWeight: 900, fontSize: 13, letterSpacing: 1, fontFamily: "monospace", whiteSpace: "nowrap" }}>+ NEW CLIENT</button>
+              <button onClick={() => setAdding(true)} style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 10, padding: "0 20px", cursor: "pointer", fontWeight: 900, fontSize: 15, letterSpacing: 1, fontFamily: "monospace", whiteSpace: "nowrap" }}>+ NEW CLIENT</button>
             </div>
 
             {adding && (
               <div style={{ background: "#060f0f", border: "1px solid #0cc0df33", borderRadius: 14, padding: "14px 18px", marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
                 <div style={{ flex: 1, minWidth: 140 }}>
-                  <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>CLIENT NAME *</label>
+                  <label style={{ fontSize: 11, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>CLIENT NAME *</label>
                   <input autoFocus value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === "Enter" && addClient()} placeholder="Full Name" style={inp} />
                 </div>
                 <div style={{ flex: 1, minWidth: 120 }}>
-                  <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>PHONE</label>
+                  <label style={{ fontSize: 11, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>PHONE</label>
                   <input value={newPhone} onChange={e => setNewPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && addClient()} placeholder="(555) 000-0000" style={inp} />
                 </div>
                 <div style={{ minWidth: 140 }}>
-                  <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBER SINCE</label>
+                  <label style={{ fontSize: 11, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBER SINCE</label>
                   <input type="date" value={newMemberSince} onChange={e => setNewMemberSince(e.target.value)} style={inp} />
                 </div>
                 <button onClick={addClient} style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 10, padding: "9px 18px", cursor: "pointer", fontWeight: 900, fontFamily: "monospace", letterSpacing: 1 }}>ADD →</button>
@@ -486,18 +489,18 @@ export default function App() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "#fff", wordBreak: "break-word" }}>{c.name || <span style={{ color: "#4a8a8a" }}>Unnamed</span>}</span>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", wordBreak: "break-word" }}>{c.name || <span style={{ color: "#4a8a8a" }}>Unnamed</span>}</span>
                           {hasFree && <span style={{ fontSize: 9, fontWeight: 800, background: "linear-gradient(90deg,#0cc0df,#4edee4)", color: "#000", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>FREE SERVICE ★</span>}
 
                         </div>
-                        <div style={{ fontSize: 11, color: "#5a9a9a", fontFamily: "monospace", marginTop: 2 }}>
+                        <div style={{ fontSize: 13, color: "#5a9a9a", fontFamily: "monospace", marginTop: 2 }}>
                           {c.phone || "No phone"} · {c.pets.length} pet{c.pets.length !== 1 ? "s" : ""}{c.pets.some(p => p.name) ? ": " + c.pets.map(p => p.name || "?").join(", ") : ""}
                           {memberSince && <span style={{ marginLeft: 8, color: "#3a7070" }}>· since {new Date(memberSince).toLocaleDateString()}</span>}
                         </div>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "monospace", color: punches > 0 ? "#0cc0df" : "#2a5555" }}>{punches}</div>
-                        <div style={{ fontSize: 9, color: "#4a8a8a", fontFamily: "monospace", letterSpacing: 1 }}>PUNCHES</div>
+                        <div style={{ fontSize: 20, fontWeight: 900, fontFamily: "monospace", color: punches > 0 ? "#0cc0df" : "#2a5555" }}>{punches}</div>
+                        <div style={{ fontSize: 10, color: "#4a8a8a", fontFamily: "monospace", letterSpacing: 1 }}>PUNCHES</div>
                       </div>
                       <span style={{ color: "#2a5555", fontSize: 16 }}>›</span>
                     </div>
