@@ -294,6 +294,8 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
 // ── Client Detail ─────────────────────────────────────────────────────────────
 function ClientDetail({ client, onUpdate, onBack, onDelete }) {
   const [c, setC] = useState(client);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
   const push = u => { setC(u); onUpdate(u); };
   const updatePet = p => push({ ...c, pets: c.pets.map(x => x.id === p.id ? p : x) });
   const removePet = id => push({ ...c, pets: c.pets.filter(p => p.id !== id) });
@@ -326,7 +328,25 @@ function ClientDetail({ client, onUpdate, onBack, onDelete }) {
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
   
             <span style={{ fontSize: 11, color: "#0cc0df", fontFamily: "monospace" }}>{total} punches total</span>
-            <button onClick={onDelete} style={{ background: "#1a0808", border: "1px solid #3a1515", color: "#c05050", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 10, fontFamily: "monospace", letterSpacing: 1 }}>DELETE</button>
+            {!confirmDelete ? (
+              <button onClick={() => setConfirmDelete(true)} style={{ background: "#1a0808", border: "1px solid #3a1515", color: "#c05050", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 10, fontFamily: "monospace", letterSpacing: 1 }}>ARCHIVE</button>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#1a0808", border: "1px solid #3a1515", borderRadius: 8, padding: "6px 12px" }}>
+                <span style={{ fontSize: 10, color: "#ff6b6b", fontFamily: "monospace" }}>Type DELETE:</span>
+                <input
+                  autoFocus
+                  value={deleteInput}
+                  onChange={e => setDeleteInput(e.target.value)}
+                  style={{ background: "transparent", border: "none", borderBottom: "1px solid #c05050", color: "#ff6b6b", fontSize: 11, fontFamily: "monospace", outline: "none", width: 70 }}
+                />
+                <button
+                  onClick={() => { if (deleteInput === "DELETE") { onDelete(); } }}
+                  disabled={deleteInput !== "DELETE"}
+                  style={{ background: deleteInput === "DELETE" ? "#c05050" : "#2a1010", border: "none", borderRadius: 6, color: "#fff", fontSize: 10, fontWeight: 800, padding: "3px 8px", cursor: deleteInput === "DELETE" ? "pointer" : "not-allowed", fontFamily: "monospace" }}
+                >✓</button>
+                <button onClick={() => { setConfirmDelete(false); setDeleteInput(""); }} style={{ background: "transparent", border: "none", color: "#555", cursor: "pointer", fontSize: 13 }}>✕</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -372,12 +392,17 @@ export default function App() {
     persist(clients.map(c => c.id === u.id ? u : c));
     if (selected?.id === u.id) setSelected(u);
   };
-  const deleteClient = id => { persist(clients.filter(c => c.id !== id)); setSelected(null); };
+  const deleteClient = id => {
+    persist(clients.map(c => c.id === id ? { ...c, deleted: true, deletedAt: new Date().toISOString() } : c));
+    setSelected(null);
+  };
 
   const filtered = clients.filter(c =>
-    fmt(c.name).includes(fmt(search)) || fmt(c.phone).includes(fmt(search)) ||
-    c.pets.some(p => fmt(p.name).includes(fmt(search)) || fmt(p.breed).includes(fmt(search)))
+    !c.deleted &&
+    (fmt(c.name).includes(fmt(search)) || fmt(c.phone).includes(fmt(search)) ||
+    c.pets.some(p => fmt(p.name).includes(fmt(search)) || fmt(p.breed).includes(fmt(search))))
   );
+  const archived = clients.filter(c => c.deleted);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#0a0f0f", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
@@ -478,6 +503,39 @@ export default function App() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+            {/* Archived clients section */}
+            {archived.length > 0 && !search && (
+              <div style={{ marginTop: 24 }}>
+                <div style={{
+                  fontSize: 10, letterSpacing: 2, color: "#3a5555", fontFamily: "monospace",
+                  marginBottom: 10, display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <span>📁 ARCHIVED CLIENTS ({archived.length})</span>
+                  <span style={{ color: "#2a4444", fontSize: 9 }}>— tap to restore</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {archived.map(c => (
+                    <div key={c.id}
+                      style={{ background: "#060c0c", border: "1px solid #0f1e1e", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, opacity: 0.6 }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#4a7a7a" }}>{c.name}</div>
+                        <div style={{ fontSize: 10, color: "#2a4a4a", fontFamily: "monospace" }}>
+                          {c.phone} · archived {c.deletedAt ? new Date(c.deletedAt).toLocaleDateString() : ""}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const restored = { ...c, deleted: false, deletedAt: null };
+                          persist(clients.map(x => x.id === c.id ? restored : x));
+                        }}
+                        style={{ background: "#061a1a", border: "1px solid #0cc0df44", color: "#4edee4", borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontSize: 10, fontFamily: "monospace", letterSpacing: 1, flexShrink: 0 }}
+                      >RESTORE</button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </>
