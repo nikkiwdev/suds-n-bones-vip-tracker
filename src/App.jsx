@@ -147,9 +147,11 @@ function GroomSlot({ slot, idx, onChange, freeType }) {
           <>
             {!isFree && (
               <select value={selType} onChange={e => setSelType(e.target.value)} style={{
-                background: "#0a1a1a", border: "1px solid #2a5555", borderRadius: 6,
-                color: TYPE_COLORS[selType], fontSize: 10, fontWeight: 800,
-                padding: "2px 4px", outline: "none", cursor: "pointer", fontFamily: "monospace",
+                background: "#111", border: "2px solid " + TYPE_COLORS[selType],
+                borderRadius: 6, color: TYPE_COLORS[selType],
+                fontSize: 12, fontWeight: 900, padding: "3px 6px",
+                outline: "none", cursor: "pointer", fontFamily: "monospace",
+                minWidth: 52, flexShrink: 0,
               }}>
                 <option value="FH">FH</option>
                 <option value="MT">MT</option>
