@@ -205,7 +205,7 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
   return (
     <div style={{ background: "#0e1a1a", border: `1px solid ${cycleComplete ? "#4edee4" : "#1a3333"}`, borderRadius: 16, overflow: "hidden", marginBottom: 14 }}>
       {/* Pet header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "linear-gradient(135deg,#0a2020,#061818)", borderBottom: "1px solid #1a3333" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6, padding: "10px 12px", background: "linear-gradient(135deg,#0a2020,#061818)", borderBottom: "1px solid #1a3333" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 30, height: 30, borderRadius: "50%", background: "#0cc0df22", border: "1px solid #0cc0df44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🐾</span>
           {editName
@@ -266,7 +266,7 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
       </div>
 
       {/* Punch columns */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
         <div style={{ padding: "10px 12px", borderRight: "1px solid #0f2626" }}>
           <div style={{ fontSize: 11, letterSpacing: 2, color: "#0cc0df", fontWeight: 800, marginBottom: 6, fontFamily: "monospace" }}>🛁 BATH / BB CARD</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -304,12 +304,12 @@ function ClientDetail({ client, onUpdate, onBack, onDelete }) {
   const membershipSoon = c.membership && !membershipExpired && (new Date(c.membership) - new Date()) < 30 * 24 * 60 * 60 * 1000;
 
   return (
-    <div style={{ maxWidth: 820, margin: "0 auto" }}>
+    <div style={{ maxWidth: 820, margin: "0 auto", minWidth: 0 }}>
       <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#0cc0df", cursor: "pointer", fontSize: 12, marginBottom: 18, display: "flex", alignItems: "center", gap: 6, fontFamily: "monospace", letterSpacing: 2, padding: 0 }}>← ALL CLIENTS</button>
 
       <div style={{ background: "linear-gradient(135deg,#071a1a,#040f0f)", border: "1px solid #1a3333", borderRadius: 16, padding: "16px 20px", marginBottom: 18 }}>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flex: 1 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flex: 1, minWidth: 0 }}>
             <div style={{ flex: 1, minWidth: 150 }}>
               <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>CLIENT NAME</label>
               <input value={c.name} onChange={e => push({ ...c, name: e.target.value })} placeholder="Full Name" style={inp} />
@@ -390,11 +390,11 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a0f0f", color: "#fff" }}>
-      <div style={{ background: "#000", borderBottom: "2px solid #0cc0df", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 70, position: "sticky", top: 0, zIndex: 20 }}>
+      <div style={{ background: "#000", borderBottom: "2px solid #0cc0df", padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, position: "sticky", top: 0, zIndex: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={LOGO_SRC} alt="SNB" style={{ width: 54, height: 54, objectFit: "contain" }} />
+          <img src={LOGO_SRC} alt="SNB" style={{ width: 44, height: 44, objectFit: "contain" }} />
           <div>
-            <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 2, fontFamily: "monospace", background: "linear-gradient(90deg,#4edee4,#0cc0df)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>SUDS N&#39; BONES</div>
+            <div style={{ fontSize: 17, fontWeight: 900, letterSpacing: 1, fontFamily: "monospace", background: "linear-gradient(90deg,#4edee4,#0cc0df)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>SUDS N&#39; BONES</div>
             <div style={{ fontSize: 9, color: "#6ababa", fontFamily: "monospace", letterSpacing: 3 }}>GROOMING PARLOR · VIP TRACKER</div>
           </div>
         </div>
@@ -403,16 +403,16 @@ export default function App() {
             <div style={{ fontSize: 20, fontWeight: 800, color: "#4edee4", fontFamily: "monospace" }}>{clients.length}</div>
             <div style={{ fontSize: 9, color: "#6ababa", fontFamily: "monospace", letterSpacing: 1 }}>CLIENTS</div>
           </div>
-          <img src={MASCOT_SRC} alt="mascot" style={{ height: 58, width: "auto", objectFit: "contain" }} />
+          <img src={MASCOT_SRC} alt="mascot" style={{ height: 46, width: "auto", objectFit: "contain" }} />
         </div>
       </div>
 
-      <div style={{ padding: "24px", maxWidth: 860, margin: "0 auto" }}>
+      <div style={{ padding: "16px", maxWidth: 860, margin: "0 auto" }}>
         {selected ? (
           <ClientDetail client={selected} onUpdate={updateClient} onBack={() => setSelected(null)} onDelete={() => deleteClient(selected.id)} />
         ) : (
           <>
-            <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
               <div style={{ flex: 1, position: "relative" }}>
                 <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#6ababa" }}>🔍</span>
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by client, phone, pet name, or breed..." style={{ ...inp, paddingLeft: 36, fontSize: 13, background: "#060f0f" }} />
@@ -464,7 +464,7 @@ export default function App() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{c.name || <span style={{ color: "#4a8a8a" }}>Unnamed</span>}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#fff", wordBreak: "break-word" }}>{c.name || <span style={{ color: "#4a8a8a" }}>Unnamed</span>}</span>
                           {hasFree && <span style={{ fontSize: 9, fontWeight: 800, background: "linear-gradient(90deg,#0cc0df,#4edee4)", color: "#000", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>FREE SERVICE ★</span>}
                           {expired && <span style={{ fontSize: 9, fontWeight: 800, color: "#ff6b6b", background: "#ff6b6b22", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>EXPIRED</span>}
                           {soon && <span style={{ fontSize: 9, fontWeight: 800, color: "#f0a500", background: "#f0a50022", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>EXPIRING SOON</span>}
