@@ -1,0 +1,22 @@
+{
+  "name": "Suds N' Bones VIP Tracker",
+  "short_name": "SNB VIP",
+  "description": "Grooming Parlor VIP Punch Card System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f0f",
+  "theme_color": "#0cc0df",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
