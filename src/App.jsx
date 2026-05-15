@@ -52,7 +52,7 @@ function makeGroomSlots() {
 }
 function emptyCard() { return { baths: makeBathSlots(), grooms: makeGroomSlots(), archivedCycles: [] }; }
 function emptyPet(name) { return { id: Date.now() + Math.random(), name: name || "", breed: "", card: emptyCard() }; }
-function emptyClient() { return { id: Date.now(), name: "", phone: "", membership: "", pets: [emptyPet()] }; }
+function emptyClient() { return { id: Date.now(), name: "", phone: "", memberSince: "", pets: [emptyPet()] }; }
 
 const today = () => new Date().toISOString().slice(0, 10);
 const fmt = (s) => (s || "").trim().toLowerCase();
@@ -300,8 +300,7 @@ function ClientDetail({ client, onUpdate, onBack, onDelete }) {
   const addPet = () => push({ ...c, pets: [...c.pets, emptyPet()] });
   const total = c.pets.reduce((a, p) => a + p.card.baths.filter(s => s.date).length + p.card.grooms.filter(s => s.date).length, 0);
 
-  const membershipExpired = c.membership && new Date(c.membership) < new Date();
-  const membershipSoon = c.membership && !membershipExpired && (new Date(c.membership) - new Date()) < 30 * 24 * 60 * 60 * 1000;
+  const memberSince = c.memberSince || c.membership || "";
 
   return (
     <div style={{ maxWidth: 820, margin: "0 auto", minWidth: 0 }}>
@@ -319,14 +318,13 @@ function ClientDetail({ client, onUpdate, onBack, onDelete }) {
               <input value={c.phone} onChange={e => push({ ...c, phone: e.target.value })} placeholder="(555) 000-0000" style={inp} />
             </div>
             <div style={{ minWidth: 150 }}>
-              <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBERSHIP EXPIRES</label>
-              <input type="date" value={c.membership || ""} onChange={e => push({ ...c, membership: e.target.value })}
-                style={{ ...inp, color: membershipExpired ? "#ff6b6b" : membershipSoon ? "#f0a500" : "#e0fffe" }} />
+              <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBER SINCE</label>
+              <input type="date" value={memberSince} onChange={e => push({ ...c, memberSince: e.target.value })}
+                style={{ ...inp, color: "#e0fffe" }} />
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            {membershipExpired && <span style={{ fontSize: 10, color: "#ff6b6b", fontFamily: "monospace", fontWeight: 800, background: "#ff6b6b22", padding: "3px 8px", borderRadius: 6 }}>⚠ EXPIRED</span>}
-            {membershipSoon && <span style={{ fontSize: 10, color: "#f0a500", fontFamily: "monospace", fontWeight: 800, background: "#f0a50022", padding: "3px 8px", borderRadius: 6 }}>⏰ EXPIRING SOON</span>}
+  
             <span style={{ fontSize: 11, color: "#0cc0df", fontFamily: "monospace" }}>{total} punches total</span>
             <button onClick={onDelete} style={{ background: "#1a0808", border: "1px solid #3a1515", color: "#c05050", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 10, fontFamily: "monospace", letterSpacing: 1 }}>DELETE</button>
           </div>
@@ -360,15 +358,15 @@ export default function App() {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
-  const [newMembership, setNewMembership] = useState("");
+  const [newMemberSince, setNewMemberSince] = useState("");
 
   useEffect(() => { dbLoad().then(d => { setClients(d); setLoading(false); }); }, []);
 
   const persist = u => { setClients(u); dbSave(u); };
   const addClient = () => {
     if (!newName.trim()) return;
-    const c = { ...emptyClient(), name: newName.trim(), phone: newPhone.trim(), membership: newMembership };
-    persist([c, ...clients]); setAdding(false); setNewName(""); setNewPhone(""); setNewMembership(""); setSelected(c);
+    const c = { ...emptyClient(), name: newName.trim(), phone: newPhone.trim(), memberSince: newMemberSince };
+    persist([c, ...clients]); setAdding(false); setNewName(""); setNewPhone(""); setNewMemberSince(""); setSelected(c);
   };
   const updateClient = u => {
     persist(clients.map(c => c.id === u.id ? u : c));
@@ -431,8 +429,8 @@ export default function App() {
                   <input value={newPhone} onChange={e => setNewPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && addClient()} placeholder="(555) 000-0000" style={inp} />
                 </div>
                 <div style={{ minWidth: 140 }}>
-                  <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBERSHIP EXPIRES</label>
-                  <input type="date" value={newMembership} onChange={e => setNewMembership(e.target.value)} style={inp} />
+                  <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBER SINCE</label>
+                  <input type="date" value={newMemberSince} onChange={e => setNewMemberSince(e.target.value)} style={inp} />
                 </div>
                 <button onClick={addClient} style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 10, padding: "9px 18px", cursor: "pointer", fontWeight: 900, fontFamily: "monospace", letterSpacing: 1 }}>ADD →</button>
                 <button onClick={() => setAdding(false)} style={{ background: "transparent", border: "1px solid #2a5555", color: "#5a9a9a", borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontSize: 13 }}>✕</button>
@@ -451,13 +449,12 @@ export default function App() {
                 {filtered.map(c => {
                   const punches = c.pets.reduce((a, p) => a + p.card.baths.filter(s => s.date).length + p.card.grooms.filter(s => s.date).length, 0);
                   const hasFree = c.pets.some(p => p.card.baths[3]?.date || p.card.grooms[7]?.date);
-                  const expired = c.membership && new Date(c.membership) < new Date();
-                  const soon = c.membership && !expired && (new Date(c.membership) - new Date()) < 30 * 24 * 60 * 60 * 1000;
+                  const memberSince = c.memberSince || c.membership || "";
                   return (
                     <div key={c.id} onClick={() => setSelected(c)}
-                      style={{ background: "#070f0f", border: "1px solid " + (hasFree ? "#0cc0df55" : expired ? "#ff6b6b33" : "#0f2020"), borderRadius: 12, padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "all 0.15s" }}
+                      style={{ background: "#070f0f", border: "1px solid " + (hasFree ? "#0cc0df55" : "#0f2020"), borderRadius: 12, padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "all 0.15s" }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = "#0cc0df88"; e.currentTarget.style.background = "#0a1818"; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = hasFree ? "#0cc0df55" : expired ? "#ff6b6b33" : "#0f2020"; e.currentTarget.style.background = "#070f0f"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = hasFree ? "#0cc0df55" : "#0f2020"; e.currentTarget.style.background = "#070f0f"; }}
                     >
                       <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#0cc0df22,#4edee411)", border: "1px solid #0cc0df33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, fontWeight: 700, color: "#4edee4" }}>
                         {c.name?.[0]?.toUpperCase() || "?"}
@@ -466,12 +463,11 @@ export default function App() {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 14, fontWeight: 700, color: "#fff", wordBreak: "break-word" }}>{c.name || <span style={{ color: "#4a8a8a" }}>Unnamed</span>}</span>
                           {hasFree && <span style={{ fontSize: 9, fontWeight: 800, background: "linear-gradient(90deg,#0cc0df,#4edee4)", color: "#000", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>FREE SERVICE ★</span>}
-                          {expired && <span style={{ fontSize: 9, fontWeight: 800, color: "#ff6b6b", background: "#ff6b6b22", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>EXPIRED</span>}
-                          {soon && <span style={{ fontSize: 9, fontWeight: 800, color: "#f0a500", background: "#f0a50022", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>EXPIRING SOON</span>}
+
                         </div>
                         <div style={{ fontSize: 11, color: "#5a9a9a", fontFamily: "monospace", marginTop: 2 }}>
                           {c.phone || "No phone"} · {c.pets.length} pet{c.pets.length !== 1 ? "s" : ""}{c.pets.some(p => p.name) ? ": " + c.pets.map(p => p.name || "?").join(", ") : ""}
-                          {c.membership && <span style={{ marginLeft: 8, color: expired ? "#ff6b6b" : soon ? "#f0a500" : "#3a7070" }}>· exp {new Date(c.membership).toLocaleDateString()}</span>}
+                          {memberSince && <span style={{ marginLeft: 8, color: "#3a7070" }}>· since {new Date(memberSince).toLocaleDateString()}</span>}
                         </div>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
