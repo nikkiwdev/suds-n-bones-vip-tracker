@@ -28,18 +28,32 @@ async function dbSave(data) {
   catch(e) { console.error(e); }
 }
 
-function makeSlots(prefix) {
+// Bath: 3 paid + 1 free
+function makeBathSlots() {
   return [
-    { label: prefix + " 1", date: "" }, { label: prefix + " 2", date: "" },
-    { label: prefix + " 3", date: "" }, { label: prefix + " 4", date: "" },
-    { label: prefix + " 5", date: "" }, { label: prefix + " 6", date: "" },
-    { label: prefix + " 7", date: "" },
-    { label: "FREE " + prefix, date: "", isFree: true },
+    { label: "Bath 1", date: "", isFree: false },
+    { label: "Bath 2", date: "", isFree: false },
+    { label: "Bath 3", date: "", isFree: false },
+    { label: "FREE Bath", date: "", isFree: true },
   ];
 }
-function emptyCard() { return { baths: makeSlots("Bath"), grooms: makeSlots("Groom") }; }
-function emptyPet(name) { return { id: Date.now() + Math.random(), name: name || "", card: emptyCard() }; }
-function emptyClient() { return { id: Date.now(), name: "", phone: "", pets: [emptyPet()] }; }
+// Groom: 7 paid (with type) + 1 free (mirrors #7)
+function makeGroomSlots() {
+  return [
+    { label: "Groom 1", date: "", type: "", isFree: false },
+    { label: "Groom 2", date: "", type: "", isFree: false },
+    { label: "Groom 3", date: "", type: "", isFree: false },
+    { label: "Groom 4", date: "", type: "", isFree: false },
+    { label: "Groom 5", date: "", type: "", isFree: false },
+    { label: "Groom 6", date: "", type: "", isFree: false },
+    { label: "Groom 7", date: "", type: "", isFree: false },
+    { label: "FREE Groom", date: "", type: "", isFree: true },
+  ];
+}
+function emptyCard() { return { baths: makeBathSlots(), grooms: makeGroomSlots(), archivedCycles: [] }; }
+function emptyPet(name) { return { id: Date.now() + Math.random(), name: name || "", breed: "", card: emptyCard() }; }
+function emptyClient() { return { id: Date.now(), name: "", phone: "", membership: "", pets: [emptyPet()] }; }
+
 const today = () => new Date().toISOString().slice(0, 10);
 const fmt = (s) => (s || "").trim().toLowerCase();
 
@@ -49,27 +63,28 @@ const inp = {
   width: "100%", boxSizing: "border-box", fontFamily: "system-ui,sans-serif",
 };
 
-function PunchSlot({ slot, idx, onChange }) {
+const TYPE_COLORS = { FH: "#4edee4", MT: "#f0a500", BB: "#a78bfa" };
+const TYPE_BG    = { FH: "#0cc0df22", MT: "#f0a50022", BB: "#a78bfa22" };
+
+// ── Bath Punch Slot ───────────────────────────────────────────────────────────
+function BathSlot({ slot, idx, onChange }) {
   const dateRef = useRef(null);
   const filled = !!slot.date;
   const isFree = !!slot.isFree;
-  const punch = () => { onChange(dateRef.current?.value || today()); };
+  const punch = () => { onChange({ date: dateRef.current?.value || today() }); };
   return (
     <div style={{
-      display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 10,
+      display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10,
       background: isFree ? (filled ? "linear-gradient(135deg,#0cc0df,#4edee4)" : "#1a3a3a") : (filled ? "#0a2e2e" : "#0a1a1a"),
-      border: "1px solid " + (isFree ? (filled ? "#4edee4" : "#0cc0df") + "55" : (filled ? "#0cc0df44" : "#0f2626")),
+      border: "1px solid " + (isFree ? (filled ? "#4edee455" : "#0cc0df55") : (filled ? "#0cc0df44" : "#0f2626")),
     }}>
       <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
         background: isFree ? (filled ? "rgba(0,0,0,0.2)" : "#0cc0df22") : (filled ? "#0cc0df22" : "#1a2e2e"),
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        {filled
-          ? <span style={{ fontSize: 12, color: isFree ? "#000" : "#4edee4" }}>✓</span>
-          : isFree
-            ? <span style={{ fontSize: 10, fontWeight: 800, color: "#4edee4", fontFamily: "monospace" }}>★</span>
-            : <span style={{ fontSize: 10, color: "#6ababa", fontFamily: "monospace", fontWeight: 700 }}>{idx + 1}</span>
-        }
+        {filled ? <span style={{ fontSize: 12, color: isFree ? "#000" : "#4edee4" }}>✓</span>
+          : isFree ? <span style={{ fontSize: 10, fontWeight: 800, color: "#4edee4" }}>★</span>
+          : <span style={{ fontSize: 10, color: "#6ababa", fontWeight: 700, fontFamily: "monospace" }}>{idx + 1}</span>}
       </div>
       <span style={{ fontSize: 11, fontWeight: isFree ? 800 : 600, flex: 1,
         color: isFree ? (filled ? "#000" : "#4edee4") : (filled ? "#5de7ed" : "#7acaca"),
@@ -81,43 +96,162 @@ function PunchSlot({ slot, idx, onChange }) {
       }
       {!filled
         ? <button onClick={punch} style={{ background: isFree ? "#4edee4" : "#0cc0df", border: "none", borderRadius: 6, color: "#000", fontSize: 9, fontWeight: 800, padding: "3px 8px", cursor: "pointer", letterSpacing: 1, textTransform: "uppercase", fontFamily: "monospace", flexShrink: 0 }}>PUNCH</button>
-        : <button onClick={() => onChange("")} style={{ background: "transparent", border: "none", color: isFree ? "#00000055" : "#5a9a9a", cursor: "pointer", fontSize: 12, padding: "0 2px", flexShrink: 0 }}>✕</button>
+        : <button onClick={() => onChange({ date: "" })} style={{ background: "transparent", border: "none", color: isFree ? "#00000055" : "#5a9a9a", cursor: "pointer", fontSize: 12, padding: "0 2px", flexShrink: 0 }}>✕</button>
       }
     </div>
   );
 }
 
+// ── Groom Punch Slot ──────────────────────────────────────────────────────────
+function GroomSlot({ slot, idx, onChange, freeType }) {
+  const dateRef = useRef(null);
+  const [selType, setSelType] = useState("FH");
+  const filled = !!slot.date;
+  const isFree = !!slot.isFree;
+  const tc = TYPE_COLORS[slot.type] || TYPE_COLORS[freeType] || "#4edee4";
+  const tb = TYPE_BG[slot.type] || "#0cc0df22";
+
+  const punch = () => {
+    const t = isFree ? freeType : selType;
+    onChange({ date: dateRef.current?.value || today(), type: t });
+  };
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10,
+      background: isFree ? (filled ? `linear-gradient(135deg,${tc}cc,${tc}88)` : "#1a3a3a") : (filled ? tb : "#0a1a1a"),
+      border: "1px solid " + (isFree ? tc + "66" : (filled ? tc + "44" : "#0f2626")),
+    }}>
+      <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+        background: filled ? tc + "33" : "#1a2e2e",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        {filled ? <span style={{ fontSize: 12, color: isFree ? "#fff" : tc }}>✓</span>
+          : isFree ? <span style={{ fontSize: 10, fontWeight: 800, color: "#4edee4" }}>★</span>
+          : <span style={{ fontSize: 10, color: "#6ababa", fontWeight: 700, fontFamily: "monospace" }}>{idx + 1}</span>}
+      </div>
+
+      <span style={{ fontSize: 11, fontWeight: isFree ? 800 : 600, flex: 1,
+        color: isFree ? (filled ? "#fff" : "#4edee4") : (filled ? tc : "#7acaca"),
+        fontFamily: "monospace", letterSpacing: 0.5, textTransform: "uppercase",
+      }}>
+        {isFree ? `FREE ${freeType || "Groom"}` : slot.label}
+        {filled && slot.type && !isFree && (
+          <span style={{ marginLeft: 6, fontSize: 9, background: tc + "33", color: tc, borderRadius: 4, padding: "1px 5px", fontWeight: 800 }}>{slot.type}</span>
+        )}
+      </span>
+
+      {filled
+        ? <span style={{ fontSize: 11, color: isFree ? "#ffffff99" : tc + "99", fontFamily: "monospace" }}>{slot.date}</span>
+        : (
+          <>
+            {!isFree && (
+              <select value={selType} onChange={e => setSelType(e.target.value)} style={{
+                background: "#0a1a1a", border: "1px solid #2a5555", borderRadius: 6,
+                color: TYPE_COLORS[selType], fontSize: 10, fontWeight: 800,
+                padding: "2px 4px", outline: "none", cursor: "pointer", fontFamily: "monospace",
+              }}>
+                <option value="FH">FH</option>
+                <option value="MT">MT</option>
+              </select>
+            )}
+            <input ref={dateRef} type="date" defaultValue={today()} style={{ background: "transparent", border: "none", color: "#7acaca", fontSize: 10, fontFamily: "monospace", outline: "none", width: 100, cursor: "pointer" }} />
+          </>
+        )
+      }
+
+      {!filled
+        ? <button onClick={punch} style={{ background: isFree ? "#4edee4" : "#0cc0df", border: "none", borderRadius: 6, color: "#000", fontSize: 9, fontWeight: 800, padding: "3px 8px", cursor: "pointer", letterSpacing: 1, textTransform: "uppercase", fontFamily: "monospace", flexShrink: 0 }}>PUNCH</button>
+        : <button onClick={() => onChange({ date: "", type: "" })} style={{ background: "transparent", border: "none", color: isFree ? "#ffffff55" : "#5a9a9a", cursor: "pointer", fontSize: 12, padding: "0 2px", flexShrink: 0 }}>✕</button>
+      }
+    </div>
+  );
+}
+
+// ── Pet Card ──────────────────────────────────────────────────────────────────
 function PetCard({ pet, onUpdate, onRemove, isOnly }) {
   const [editName, setEditName] = useState(!pet.name);
   const [tmpName, setTmpName] = useState(pet.name);
-  const bathF = pet.card.baths.filter(s => s.date).length;
-  const groomF = pet.card.grooms.filter(s => s.date).length;
-  const bathPct = Math.round((Math.min(bathF, 7) / 7) * 100);
-  const groomPct = Math.round((Math.min(groomF, 7) / 7) * 100);
-  const bathFree = pet.card.baths[7]?.date;
+  const [showArchive, setShowArchive] = useState(false);
+
+  const bathF   = pet.card.baths.filter(s => s.date).length;
+  const groomF  = pet.card.grooms.filter(s => s.date).length;
+  const bathFree  = pet.card.baths[3]?.date;
   const groomFree = pet.card.grooms[7]?.date;
-  const punchSlot = (type, idx, date) => {
-    const card = { ...pet.card };
-    card[type] = card[type].map((s, i) => i === idx ? { ...s, date } : s);
-    onUpdate({ ...pet, card });
+  const freeGroomType = pet.card.grooms[6]?.type || "";
+  const bathPct  = Math.round((Math.min(bathF, 3) / 3) * 100);
+  const groomPct = Math.round((Math.min(groomF, 7) / 7) * 100);
+  const cycles   = pet.card.archivedCycles || [];
+
+  const punchBath = (idx, val) => {
+    const baths = pet.card.baths.map((s, i) => i === idx ? { ...s, ...val } : s);
+    onUpdate({ ...pet, card: { ...pet.card, baths } });
   };
+  const punchGroom = (idx, val) => {
+    const grooms = pet.card.grooms.map((s, i) => i === idx ? { ...s, ...val } : s);
+    onUpdate({ ...pet, card: { ...pet.card, grooms } });
+  };
+
+  const resetCycle = () => {
+    const archived = { ...pet.card, archivedCycles: undefined, date: new Date().toISOString() };
+    const newCard = { baths: makeBathSlots(), grooms: makeGroomSlots(), archivedCycles: [...cycles, archived] };
+    onUpdate({ ...pet, card: newCard });
+  };
+
+  const cycleComplete = bathFree && groomFree;
+
   return (
-    <div style={{ background: "#0e1a1a", border: "1px solid #1a3333", borderRadius: 16, overflow: "hidden", marginBottom: 14 }}>
+    <div style={{ background: "#0e1a1a", border: `1px solid ${cycleComplete ? "#4edee4" : "#1a3333"}`, borderRadius: 16, overflow: "hidden", marginBottom: 14 }}>
+      {/* Pet header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "linear-gradient(135deg,#0a2020,#061818)", borderBottom: "1px solid #1a3333" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 30, height: 30, borderRadius: "50%", background: "#0cc0df22", border: "1px solid #0cc0df44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🐾</span>
           {editName
-            ? <input autoFocus value={tmpName} onChange={e => setTmpName(e.target.value)} onBlur={() => { onUpdate({ ...pet, name: tmpName }); setEditName(false); }} onKeyDown={e => e.key === "Enter" && e.target.blur()} placeholder="Pet name..." style={{ background: "#061414", border: "1px solid #0cc0df", borderRadius: 6, color: "#fff", fontSize: 14, fontWeight: 700, padding: "3px 10px", outline: "none", fontFamily: "system-ui,sans-serif" }} />
-            : <span onClick={() => setEditName(true)} style={{ fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "system-ui,sans-serif", borderBottom: "1px dashed #2a5555" }}>{pet.name || "TAP TO NAME PET"}</span>
+            ? <input autoFocus value={tmpName} onChange={e => setTmpName(e.target.value)}
+                onBlur={() => { onUpdate({ ...pet, name: tmpName }); setEditName(false); }}
+                onKeyDown={e => e.key === "Enter" && e.target.blur()}
+                placeholder="Pet name..."
+                style={{ background: "#061414", border: "1px solid #0cc0df", borderRadius: 6, color: "#fff", fontSize: 14, fontWeight: 700, padding: "3px 10px", outline: "none", fontFamily: "system-ui,sans-serif" }} />
+            : <div>
+                <span onClick={() => setEditName(true)} style={{ fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "system-ui,sans-serif", borderBottom: "1px dashed #2a5555" }}>{pet.name || "TAP TO NAME PET"}</span>
+                {pet.breed && <span style={{ marginLeft: 8, fontSize: 10, color: "#6ababa", fontFamily: "monospace" }}>{pet.breed}</span>}
+              </div>
           }
           {bathFree && <span title="Free Bath Earned!">🛁✨</span>}
           {groomFree && <span title="Free Groom Earned!">✂️✨</span>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 10, color: "#6ababa", fontFamily: "monospace" }}>🛁{bathF}/8 · ✂️{groomF}/8</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {cycles.length > 0 && (
+            <button onClick={() => setShowArchive(!showArchive)} style={{ background: "transparent", border: "1px solid #2a5555", color: "#6ababa", borderRadius: 6, padding: "2px 8px", cursor: "pointer", fontSize: 9, fontFamily: "monospace", letterSpacing: 1 }}>
+              {cycles.length} CYCLE{cycles.length > 1 ? "S" : ""} {showArchive ? "▲" : "▼"}
+            </button>
+          )}
+          {cycleComplete && (
+            <button onClick={resetCycle} style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 6, padding: "3px 10px", cursor: "pointer", fontSize: 9, fontWeight: 800, fontFamily: "monospace", letterSpacing: 1 }}>
+              NEW CYCLE
+            </button>
+          )}
+          <span style={{ fontSize: 10, color: "#6ababa", fontFamily: "monospace" }}>🛁{bathF}/4 · ✂️{groomF}/8</span>
           {!isOnly && <button onClick={onRemove} style={{ background: "transparent", border: "none", color: "#4a8a8a", cursor: "pointer", fontSize: 15 }}>✕</button>}
         </div>
       </div>
+
+      {/* Archived cycles */}
+      {showArchive && cycles.length > 0 && (
+        <div style={{ padding: "8px 16px", background: "#060f0f", borderBottom: "1px solid #0f2020" }}>
+          {cycles.map((cyc, ci) => {
+            const bd = cyc.baths?.filter(s => s.date).length || 0;
+            const gd = cyc.grooms?.filter(s => s.date).length || 0;
+            return (
+              <div key={ci} style={{ fontSize: 11, color: "#5a9a9a", fontFamily: "monospace", padding: "3px 0" }}>
+                <span style={{ color: "#6ababa", fontWeight: 700 }}>Cycle {ci + 1}:</span> {bd} baths · {gd} grooms · completed {cyc.date ? new Date(cyc.date).toLocaleDateString() : ""}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Progress */}
       <div style={{ padding: "8px 16px 0", display: "flex", gap: 12 }}>
         {[{ label: "Bath", pct: bathPct, free: bathFree }, { label: "Groom", pct: groomPct, free: groomFree }].map(({ label, pct, free }) => (
           <div key={label} style={{ flex: 1 }}>
@@ -128,17 +262,26 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
           </div>
         ))}
       </div>
+
+      {/* Punch columns */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
         <div style={{ padding: "10px 12px", borderRight: "1px solid #0f2626" }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: "#0cc0df", fontWeight: 800, marginBottom: 6, fontFamily: "monospace" }}>🛁 BATH CARD</div>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: "#0cc0df", fontWeight: 800, marginBottom: 6, fontFamily: "monospace" }}>🛁 BATH / BB CARD</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {pet.card.baths.map((slot, i) => <PunchSlot key={i} slot={slot} idx={i} onChange={d => punchSlot("baths", i, d)} />)}
+            {pet.card.baths.map((slot, i) => <BathSlot key={i} slot={slot} idx={i} onChange={v => punchBath(i, v)} />)}
           </div>
         </div>
         <div style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: "#0cc0df", fontWeight: 800, marginBottom: 6, fontFamily: "monospace" }}>✂️ GROOM CARD</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <div style={{ fontSize: 11, letterSpacing: 2, color: "#0cc0df", fontWeight: 800, fontFamily: "monospace" }}>✂️ GROOM CARD</div>
+            <div style={{ display: "flex", gap: 4 }}>
+              {Object.entries(TYPE_COLORS).filter(([k]) => k !== "BB").map(([k, c]) => (
+                <span key={k} style={{ fontSize: 9, fontWeight: 800, color: c, background: c + "22", borderRadius: 4, padding: "1px 5px", fontFamily: "monospace" }}>{k}</span>
+              ))}
+            </div>
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {pet.card.grooms.map((slot, i) => <PunchSlot key={i} slot={slot} idx={i} onChange={d => punchSlot("grooms", i, d)} />)}
+            {pet.card.grooms.map((slot, i) => <GroomSlot key={i} slot={slot} idx={i} onChange={v => punchGroom(i, v)} freeType={freeGroomType} />)}
           </div>
         </div>
       </div>
@@ -146,6 +289,7 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
   );
 }
 
+// ── Client Detail ─────────────────────────────────────────────────────────────
 function ClientDetail({ client, onUpdate, onBack, onDelete }) {
   const [c, setC] = useState(client);
   const push = u => { setC(u); onUpdate(u); };
@@ -153,39 +297,59 @@ function ClientDetail({ client, onUpdate, onBack, onDelete }) {
   const removePet = id => push({ ...c, pets: c.pets.filter(p => p.id !== id) });
   const addPet = () => push({ ...c, pets: [...c.pets, emptyPet()] });
   const total = c.pets.reduce((a, p) => a + p.card.baths.filter(s => s.date).length + p.card.grooms.filter(s => s.date).length, 0);
+
+  const membershipExpired = c.membership && new Date(c.membership) < new Date();
+  const membershipSoon = c.membership && !membershipExpired && (new Date(c.membership) - new Date()) < 30 * 24 * 60 * 60 * 1000;
+
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto" }}>
+    <div style={{ maxWidth: 820, margin: "0 auto" }}>
       <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#0cc0df", cursor: "pointer", fontSize: 12, marginBottom: 18, display: "flex", alignItems: "center", gap: 6, fontFamily: "monospace", letterSpacing: 2, padding: 0 }}>← ALL CLIENTS</button>
+
       <div style={{ background: "linear-gradient(135deg,#071a1a,#040f0f)", border: "1px solid #1a3333", borderRadius: 16, padding: "16px 20px", marginBottom: 18 }}>
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flex: 1 }}>
-            <div style={{ flex: 1, minWidth: 160 }}>
+            <div style={{ flex: 1, minWidth: 150 }}>
               <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>CLIENT NAME</label>
               <input value={c.name} onChange={e => push({ ...c, name: e.target.value })} placeholder="Full Name" style={inp} />
             </div>
-            <div style={{ flex: 1, minWidth: 140 }}>
+            <div style={{ flex: 1, minWidth: 130 }}>
               <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>PHONE</label>
               <input value={c.phone} onChange={e => push({ ...c, phone: e.target.value })} placeholder="(555) 000-0000" style={inp} />
             </div>
+            <div style={{ minWidth: 150 }}>
+              <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBERSHIP EXPIRES</label>
+              <input type="date" value={c.membership || ""} onChange={e => push({ ...c, membership: e.target.value })}
+                style={{ ...inp, color: membershipExpired ? "#ff6b6b" : membershipSoon ? "#f0a500" : "#e0fffe" }} />
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {membershipExpired && <span style={{ fontSize: 10, color: "#ff6b6b", fontFamily: "monospace", fontWeight: 800, background: "#ff6b6b22", padding: "3px 8px", borderRadius: 6 }}>⚠ EXPIRED</span>}
+            {membershipSoon && <span style={{ fontSize: 10, color: "#f0a500", fontFamily: "monospace", fontWeight: 800, background: "#f0a50022", padding: "3px 8px", borderRadius: 6 }}>⏰ EXPIRING SOON</span>}
             <span style={{ fontSize: 11, color: "#0cc0df", fontFamily: "monospace" }}>{total} punches total</span>
             <button onClick={onDelete} style={{ background: "#1a0808", border: "1px solid #3a1515", color: "#c05050", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 10, fontFamily: "monospace", letterSpacing: 1 }}>DELETE</button>
           </div>
         </div>
       </div>
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#061a1a,#030f0f)", border: "1px solid #0cc0df44", borderRadius: 30, padding: "6px 16px" }}>
-          <img src={LOGO_SRC} alt="Suds N Bones" style={{ width: 28, height: 28, objectFit: "contain" }} />
+          <img src={LOGO_SRC} alt="SNB" style={{ width: 28, height: 28, objectFit: "contain" }} />
           <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 3, color: "#4edee4", fontFamily: "monospace" }}>VIP PUNCH CARD</span>
         </div>
         <button onClick={addPet} style={{ background: "#061a1a", border: "1px solid #0cc0df44", color: "#4edee4", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontFamily: "monospace", letterSpacing: 1 }}>+ ADD PET</button>
       </div>
-      {c.pets.map(pet => <PetCard key={pet.id} pet={pet} onUpdate={updatePet} onRemove={() => removePet(pet.id)} isOnly={c.pets.length === 1} />)}
+
+      {c.pets.map(pet => (
+        <PetCard key={pet.id} pet={pet} onUpdate={p => {
+          const updated = { ...c, pets: c.pets.map(x => x.id === p.id ? p : x) };
+          setC(updated); onUpdate(updated);
+        }} onRemove={() => removePet(pet.id)} isOnly={c.pets.length === 1} />
+      ))}
     </div>
   );
 }
 
+// ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
   const [clients, setClients] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -194,28 +358,30 @@ export default function App() {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newMembership, setNewMembership] = useState("");
 
   useEffect(() => { dbLoad().then(d => { setClients(d); setLoading(false); }); }, []);
 
   const persist = u => { setClients(u); dbSave(u); };
   const addClient = () => {
     if (!newName.trim()) return;
-    const c = { ...emptyClient(), name: newName.trim(), phone: newPhone.trim() };
-    persist([c, ...clients]); setAdding(false); setNewName(""); setNewPhone(""); setSelected(c);
+    const c = { ...emptyClient(), name: newName.trim(), phone: newPhone.trim(), membership: newMembership };
+    persist([c, ...clients]); setAdding(false); setNewName(""); setNewPhone(""); setNewMembership(""); setSelected(c);
   };
   const updateClient = u => {
     persist(clients.map(c => c.id === u.id ? u : c));
     if (selected?.id === u.id) setSelected(u);
   };
   const deleteClient = id => { persist(clients.filter(c => c.id !== id)); setSelected(null); };
+
   const filtered = clients.filter(c =>
     fmt(c.name).includes(fmt(search)) || fmt(c.phone).includes(fmt(search)) ||
-    c.pets.some(p => fmt(p.name).includes(fmt(search)))
+    c.pets.some(p => fmt(p.name).includes(fmt(search)) || fmt(p.breed).includes(fmt(search)))
   );
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#0a0f0f", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
-      <img src={LOGO_SRC} alt="Suds N Bones" style={{ width: 130, height: 130, objectFit: "contain" }} />
+      <img src={LOGO_SRC} alt="SNB" style={{ width: 130, height: 130, objectFit: "contain" }} />
       <span style={{ color: "#0cc0df", fontFamily: "monospace", letterSpacing: 4, fontSize: 12 }}>LOADING...</span>
     </div>
   );
@@ -224,7 +390,7 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: "#0a0f0f", color: "#fff" }}>
       <div style={{ background: "#000", borderBottom: "2px solid #0cc0df", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 70, position: "sticky", top: 0, zIndex: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={LOGO_SRC} alt="Suds N Bones logo" style={{ width: 54, height: 54, objectFit: "contain" }} />
+          <img src={LOGO_SRC} alt="SNB" style={{ width: 54, height: 54, objectFit: "contain" }} />
           <div>
             <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 2, fontFamily: "monospace", background: "linear-gradient(90deg,#4edee4,#0cc0df)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.1 }}>SUDS N&#39; BONES</div>
             <div style={{ fontSize: 9, color: "#6ababa", fontFamily: "monospace", letterSpacing: 3 }}>GROOMING PARLOR · VIP TRACKER</div>
@@ -238,7 +404,8 @@ export default function App() {
           <img src={MASCOT_SRC} alt="mascot" style={{ height: 58, width: "auto", objectFit: "contain" }} />
         </div>
       </div>
-      <div style={{ padding: "24px", maxWidth: 820, margin: "0 auto" }}>
+
+      <div style={{ padding: "24px", maxWidth: 860, margin: "0 auto" }}>
         {selected ? (
           <ClientDetail client={selected} onUpdate={updateClient} onBack={() => setSelected(null)} onDelete={() => deleteClient(selected.id)} />
         ) : (
@@ -246,24 +413,30 @@ export default function App() {
             <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
               <div style={{ flex: 1, position: "relative" }}>
                 <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#6ababa" }}>🔍</span>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by client name, phone, or pet..." style={{ ...inp, paddingLeft: 36, fontSize: 13, background: "#060f0f" }} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by client, phone, pet name, or breed..." style={{ ...inp, paddingLeft: 36, fontSize: 13, background: "#060f0f" }} />
               </div>
               <button onClick={() => setAdding(true)} style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 10, padding: "0 20px", cursor: "pointer", fontWeight: 900, fontSize: 13, letterSpacing: 1, fontFamily: "monospace", whiteSpace: "nowrap" }}>+ NEW CLIENT</button>
             </div>
+
             {adding && (
               <div style={{ background: "#060f0f", border: "1px solid #0cc0df33", borderRadius: 14, padding: "14px 18px", marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-                <div style={{ flex: 1, minWidth: 150 }}>
+                <div style={{ flex: 1, minWidth: 140 }}>
                   <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>CLIENT NAME *</label>
                   <input autoFocus value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === "Enter" && addClient()} placeholder="Full Name" style={inp} />
                 </div>
-                <div style={{ flex: 1, minWidth: 130 }}>
+                <div style={{ flex: 1, minWidth: 120 }}>
                   <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>PHONE</label>
                   <input value={newPhone} onChange={e => setNewPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && addClient()} placeholder="(555) 000-0000" style={inp} />
+                </div>
+                <div style={{ minWidth: 140 }}>
+                  <label style={{ fontSize: 9, color: "#6ababa", display: "block", marginBottom: 4, fontFamily: "monospace", letterSpacing: 1.5 }}>MEMBERSHIP EXPIRES</label>
+                  <input type="date" value={newMembership} onChange={e => setNewMembership(e.target.value)} style={inp} />
                 </div>
                 <button onClick={addClient} style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 10, padding: "9px 18px", cursor: "pointer", fontWeight: 900, fontFamily: "monospace", letterSpacing: 1 }}>ADD →</button>
                 <button onClick={() => setAdding(false)} style={{ background: "transparent", border: "1px solid #2a5555", color: "#5a9a9a", borderRadius: 10, padding: "9px 14px", cursor: "pointer", fontSize: 13 }}>✕</button>
               </div>
             )}
+
             {filtered.length === 0 ? (
               <div style={{ textAlign: "center", paddingTop: 60 }}>
                 <img src={MASCOT_SRC} alt="mascot" style={{ width: 110, height: "auto", objectFit: "contain", opacity: 0.4 }} />
@@ -275,23 +448,28 @@ export default function App() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {filtered.map(c => {
                   const punches = c.pets.reduce((a, p) => a + p.card.baths.filter(s => s.date).length + p.card.grooms.filter(s => s.date).length, 0);
-                  const hasFree = c.pets.some(p => p.card.baths[7]?.date || p.card.grooms[7]?.date);
+                  const hasFree = c.pets.some(p => p.card.baths[3]?.date || p.card.grooms[7]?.date);
+                  const expired = c.membership && new Date(c.membership) < new Date();
+                  const soon = c.membership && !expired && (new Date(c.membership) - new Date()) < 30 * 24 * 60 * 60 * 1000;
                   return (
                     <div key={c.id} onClick={() => setSelected(c)}
-                      style={{ background: "#070f0f", border: "1px solid " + (hasFree ? "#0cc0df55" : "#0f2020"), borderRadius: 12, padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, transition: "all 0.15s" }}
+                      style={{ background: "#070f0f", border: "1px solid " + (hasFree ? "#0cc0df55" : expired ? "#ff6b6b33" : "#0f2020"), borderRadius: 12, padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "all 0.15s" }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = "#0cc0df88"; e.currentTarget.style.background = "#0a1818"; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = hasFree ? "#0cc0df55" : "#0f2020"; e.currentTarget.style.background = "#070f0f"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = hasFree ? "#0cc0df55" : expired ? "#ff6b6b33" : "#0f2020"; e.currentTarget.style.background = "#070f0f"; }}
                     >
                       <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#0cc0df22,#4edee411)", border: "1px solid #0cc0df33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, fontWeight: 700, color: "#4edee4" }}>
                         {c.name?.[0]?.toUpperCase() || "?"}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{c.name || <span style={{ color: "#4a8a8a" }}>Unnamed</span>}</span>
-                          {hasFree && <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, background: "linear-gradient(90deg,#0cc0df,#4edee4)", color: "#000", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>FREE SERVICE READY ★</span>}
+                          {hasFree && <span style={{ fontSize: 9, fontWeight: 800, background: "linear-gradient(90deg,#0cc0df,#4edee4)", color: "#000", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>FREE SERVICE ★</span>}
+                          {expired && <span style={{ fontSize: 9, fontWeight: 800, color: "#ff6b6b", background: "#ff6b6b22", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>EXPIRED</span>}
+                          {soon && <span style={{ fontSize: 9, fontWeight: 800, color: "#f0a500", background: "#f0a50022", borderRadius: 20, padding: "2px 8px", fontFamily: "monospace" }}>EXPIRING SOON</span>}
                         </div>
                         <div style={{ fontSize: 11, color: "#5a9a9a", fontFamily: "monospace", marginTop: 2 }}>
                           {c.phone || "No phone"} · {c.pets.length} pet{c.pets.length !== 1 ? "s" : ""}{c.pets.some(p => p.name) ? ": " + c.pets.map(p => p.name || "?").join(", ") : ""}
+                          {c.membership && <span style={{ marginLeft: 8, color: expired ? "#ff6b6b" : soon ? "#f0a500" : "#3a7070" }}>· exp {new Date(c.membership).toLocaleDateString()}</span>}
                         </div>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
@@ -308,7 +486,7 @@ export default function App() {
         )}
       </div>
       <div style={{ textAlign: "center", padding: "20px 0 30px", borderTop: "1px solid #080f0f", marginTop: 20 }}>
-        <img src={LOGO_SRC} alt="Suds N Bones" style={{ width: 38, height: 38, objectFit: "contain" }} />
+        <img src={LOGO_SRC} alt="SNB" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 9, color: "#3a7070", fontFamily: "monospace", letterSpacing: 2, marginTop: 6 }}>SUDS N&#39; BONES · VIP LOYALTY SYSTEM</div>
       </div>
     </div>
