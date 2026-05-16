@@ -401,54 +401,38 @@ export default function App() {
   };
 
   const exportCSV = () => {
-    const headers = [
-      "Client Name","Phone","Member Since","Pet Name","Breed","Cycle",
-      "Baths Punched","Bath 1","Bath 2","Bath 3","Free Bath",
-      "Grooms Punched","Groom 1","Groom 2","Groom 3","Groom 4","Groom 5","Groom 6","Groom 7",
-      "Free Groom","Status"
-    ];
-    const escape = v => `"${String(v || "").replace(/"/g, '""')}"`;
-    const rows = [headers.map(escape).join(",")];
-
+    const NL = String.fromCharCode(10);
+    const CM = String.fromCharCode(44);
+    const escape = v => String.fromCharCode(34) + String(v || "").replace(/"/g, String.fromCharCode(34)+String.fromCharCode(34)) + String.fromCharCode(34);
+    const headers = ["Client Name","Phone","Member Since","Pet Name","Breed","Cycle","Baths Punched","Bath 1","Bath 2","Bath 3","Free Bath","Grooms Punched","Groom 1","Groom 2","Groom 3","Groom 4","Groom 5","Groom 6","Groom 7","Free Groom","Status"];
+    const rows = [headers.map(escape).join(CM)];
     const active = clients.filter(c => !c.deleted);
     for (const c of active) {
       for (const p of (c.pets || [])) {
         const card = p.card || {};
         const archived = card.archivedCycles || [];
         const totalCycles = archived.length + 1;
-
         const buildRow = (baths, grooms, cycleLabel) => {
           const pb = (baths || []).filter(s => !s.isFree);
           const pg = (grooms || []).filter(s => !s.isFree);
-          const freeBath  = (baths  || []).find(s => s.isFree)?.date || "";
+          const freeBath = (baths || []).find(s => s.isFree)?.date || "";
           const freeGroom = (grooms || []).find(s => s.isFree)?.date || "";
           const status = freeBath || freeGroom ? "FREE READY" : cycleLabel.includes("completed") ? "Completed" : "Active";
-          return [
-            c.name, c.phone, c.memberSince || "", p.name, p.breed, cycleLabel,
-            pb.length,
-            pb[0]?.date||"", pb[1]?.date||"", pb[2]?.date||"", freeBath,
-            pg.length,
-            pg[0]?.date||"", pg[1]?.date||"", pg[2]?.date||"",
-            pg[3]?.date||"", pg[4]?.date||"", pg[5]?.date||"", pg[6]?.date||"",
-            freeGroom, status
-          ].map(escape).join(",");
+          return [c.name, c.phone, c.memberSince||"", p.name, p.breed, cycleLabel, pb.length, pb[0]?.date||"", pb[1]?.date||"", pb[2]?.date||"", freeBath, pg.length, pg[0]?.date||"", pg[1]?.date||"", pg[2]?.date||"", pg[3]?.date||"", pg[4]?.date||"", pg[5]?.date||"", pg[6]?.date||"", freeGroom, status].map(escape).join(CM);
         };
-
-        archived.forEach((cyc, ci) => {
-          rows.push(buildRow(cyc.baths, cyc.grooms, `Cycle ${ci+1} of ${totalCycles} (completed)`));
-        });
-        rows.push(buildRow(card.baths, card.grooms, `Cycle ${totalCycles} of ${totalCycles} (current)`));
+        archived.forEach((cyc, ci) => rows.push(buildRow(cyc.baths, cyc.grooms, "Cycle " + (ci+1) + " of " + totalCycles + " (completed)")));
+        rows.push(buildRow(card.baths, card.grooms, "Cycle " + totalCycles + " of " + totalCycles + " (current)"));
       }
     }
-
-    const csv  = rows.join(String.fromCharCode(10)) blob = new Blob([csv], { type: "text/csv" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
+    const csv = rows.join(NL);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `suds-n-bones-${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = "suds-n-bones-" + new Date().toISOString().slice(0,10) + ".csv";
     a.click();
     URL.revokeObjectURL(url);
-  };
+  }
 
   const filtered = clients.filter(c =>
     !c.deleted &&
