@@ -497,5 +497,6 @@ export default function App() {
         <div style={{fontSize:9,color:"#3a7070",fontFamily:"monospace",letterSpacing:2,marginTop:6}}>SUDS N&#39; BONES &#183; VIP LOYALTY SYSTEM</div>
       </div>
     </div>
-  );
+  </div>
+      );
 }
