@@ -485,9 +485,11 @@ export default function App() {
                         <div style={{fontSize:11,color:"#2a4a4a",fontFamily:"monospace"}}>{c.phone} &#183; archived {c.deletedAt?new Date(c.deletedAt).toLocaleDateString():""}</div>
                       </div>
                       <button onClick={()=>persist(clients.map(x=>x.id===c.id?{...x,deleted:false,deletedAt:null}:x))} style={{background:"#061a1a",border:"1px solid #0cc0df44",color:"#4edee4",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:10,fontFamily:"monospace",letterSpacing:1,flexShrink:0}}>RESTORE</button>
-                    </div>))}
-              </div>)}
-          </>)}
+                    </div>
+                  ))}
+                </div>
+              )}
+          </>
       </div>
       <div style={{textAlign:"center",padding:"20px 0 30px",borderTop:"1px solid #080f0f",marginTop:20}}>
         <img src={LOGO_SRC} alt="SNB" style={{width:38,height:38,objectFit:"contain"}} />
