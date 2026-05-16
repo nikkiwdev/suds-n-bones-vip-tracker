@@ -441,9 +441,7 @@ export default function App() {
       }
     }
 
-    const csv  = rows.join("
-");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csv  = rows.join(String.fromCharCode(10)) blob = new Blob([csv], { type: "text/csv" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
     a.href = url;
