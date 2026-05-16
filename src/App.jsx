@@ -403,16 +403,15 @@ export default function App() {
                 <button onClick={()=>setAdding(false)} style={{background:"transparent",border:"1px solid #2a5555",color:"#5a9a9a",borderRadius:10,padding:"9px 14px",cursor:"pointer",fontSize:13}}>&#10005;</button>
               </div>)}
 
-            {/* A-Z Letter tabs */}
             <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:12}}>
               {letters.map(l=>(
                 <button key={l} onClick={()=>handleLetter(l)} style={{
                   background:activeLetter===l?"linear-gradient(135deg,#0cc0df,#4edee4)":"#060f0f",
                   border:"1px solid "+(activeLetter===l?"#0cc0df":"#1a3333"),
                   color:activeLetter===l?"#000":"#6ababa",
-                  borderRadius:6, padding:l==="ALL"?"4px 10px":"4px 7px",
-                  cursor:"pointer", fontSize:l==="ALL"?10:12,
-                  fontWeight:800, fontFamily:"monospace", minWidth:l==="ALL"?40:28,
+                  borderRadius:6,padding:l==="ALL"?"4px 10px":"4px 7px",
+                  cursor:"pointer",fontSize:l==="ALL"?10:12,
+                  fontWeight:800,fontFamily:"monospace",minWidth:l==="ALL"?40:28,
                   transition:"all 0.15s",
                 }}>{l}</button>))}
             </div>
@@ -462,7 +461,6 @@ export default function App() {
                     </div>);})}
               </div>)}
 
-            {/* Pagination */}
             {totalPages>1&&(
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginTop:16,flexWrap:"wrap"}}>
                 <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{background:page===0?"#060f0f":"#061a1a",border:"1px solid #1a3333",color:page===0?"#2a4444":"#4edee4",borderRadius:8,padding:"8px 16px",cursor:page===0?"not-allowed":"pointer",fontSize:12,fontFamily:"monospace",fontWeight:800,letterSpacing:1}}>&#8592; PREV</button>
@@ -473,7 +471,6 @@ export default function App() {
                 <button onClick={()=>setPage(p=>Math.min(totalPages-1,p+1))} disabled={page===totalPages-1} style={{background:page===totalPages-1?"#060f0f":"#061a1a",border:"1px solid #1a3333",color:page===totalPages-1?"#2a4444":"#4edee4",borderRadius:8,padding:"8px 16px",cursor:page===totalPages-1?"not-allowed":"pointer",fontSize:12,fontFamily:"monospace",fontWeight:800,letterSpacing:1}}>NEXT &#8594;</button>
               </div>)}
 
-            {/* Archived */}
             {archived.length>0&&!search&&activeLetter==="ALL"&&(
               <div style={{marginTop:24}}>
                 <div style={{fontSize:10,letterSpacing:2,color:"#3a5555",fontFamily:"monospace",marginBottom:10}}>&#128193; ARCHIVED ({archived.length}) &#8212; tap to restore</div>
@@ -489,14 +486,14 @@ export default function App() {
                   ))}
                 </div>
               </div>
-          )}
-      </>
-      )}
+            )}
+          </>
+        )}
+      </div>
       <div style={{textAlign:"center",padding:"20px 0 30px",borderTop:"1px solid #080f0f",marginTop:20}}>
         <img src={LOGO_SRC} alt="SNB" style={{width:38,height:38,objectFit:"contain"}} />
         <div style={{fontSize:9,color:"#3a7070",fontFamily:"monospace",letterSpacing:2,marginTop:6}}>SUDS N&#39; BONES &#183; VIP LOYALTY SYSTEM</div>
       </div>
     </div>
-  </div>
-      );
+  );
 }
