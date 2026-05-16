@@ -488,9 +488,9 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-              )}
-          </>
-      </div>
+              </div>
+          )}
+      </>
       <div style={{textAlign:"center",padding:"20px 0 30px",borderTop:"1px solid #080f0f",marginTop:20}}>
         <img src={LOGO_SRC} alt="SNB" style={{width:38,height:38,objectFit:"contain"}} />
         <div style={{fontSize:9,color:"#3a7070",fontFamily:"monospace",letterSpacing:2,marginTop:6}}>SUDS N&#39; BONES &#183; VIP LOYALTY SYSTEM</div>
