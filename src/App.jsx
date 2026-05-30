@@ -140,13 +140,26 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
   const bPct = Math.round((Math.min(bF,3)/3)*100);
   const gPct = Math.round((Math.min(gF,7)/7)*100);
   const arcs = pet.card.archivedCycles||[];
-  const done = bFr && gFr;
+ const done = bFr || gFr;
   const punchB = (i,v) => { const b=pet.card.baths.map((s,j)=>j===i?{...s,...v}:s); onUpdate({...pet,card:{...pet.card,baths:b}}); };
   const punchG = (i,v) => { const g=pet.card.grooms.map((s,j)=>j===i?{...s,...v}:s); onUpdate({...pet,card:{...pet.card,grooms:g}}); };
-  const reset  = () => {
-    const arc={...pet.card,archivedCycles:undefined,date:new Date().toISOString()};
-    onUpdate({...pet,card:{baths:makeBathSlots(),grooms:makeGroomSlots(),archivedCycles:[...arcs,arc]}});
+  const reset = () => {
+  const arc = {
+    baths: bFr ? pet.card.baths : [],
+    grooms: gFr ? pet.card.grooms : [],
+    archivedCycles: undefined,
+    date: new Date().toISOString()
   };
+
+  onUpdate({
+    ...pet,
+    card: {
+      baths: bFr ? makeBathSlots() : pet.card.baths,
+      grooms: gFr ? makeGroomSlots() : pet.card.grooms,
+      archivedCycles: [...arcs, arc]
+    }
+  });
+};
   return (
     <div style={{background:"#0e1a1a",border:"1px solid "+(done?"#4edee4":"#1a3333"),borderRadius:16,overflow:"hidden",marginBottom:14}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6,padding:"10px 12px",background:"linear-gradient(135deg,#0a2020,#061818)",borderBottom:"1px solid #1a3333"}}>
