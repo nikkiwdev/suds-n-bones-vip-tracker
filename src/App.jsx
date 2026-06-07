@@ -5,6 +5,8 @@ import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 const LOGO_SRC   = "/logo.png";
 const MASCOT_SRC = "/mascot.png";
 
+const TEMP_PASSWORD = "snbvip2025";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAOFbMMhWkrDNLKwZHBVNHEZiwzvqhNHmM",
   authDomain: "suds-n-bones.firebaseapp.com",
@@ -178,7 +180,7 @@ function PetCard({ pet, onUpdate, onRemove, isOnly }) {
           {arcs.length>0&&<button onClick={()=>setShowArc(!showArc)} style={{background:"transparent",border:"1px solid #2a5555",color:"#6ababa",borderRadius:6,padding:"2px 8px",cursor:"pointer",fontSize:10,fontFamily:"monospace",letterSpacing:1}}>{arcs.length} CYCLE{arcs.length>1?"S":""}</button>}
           {done&&<button onClick={reset} style={{background:"linear-gradient(135deg,#0cc0df,#4edee4)",border:"none",color:"#000",borderRadius:6,padding:"3px 10px",cursor:"pointer",fontSize:10,fontWeight:800,fontFamily:"monospace",letterSpacing:1}}>NEW CYCLE</button>}
           <span style={{fontSize:12,color:"#6ababa",fontFamily:"monospace"}}>&#128704;{bF}/4 &#183; &#9986;{gF}/8</span>
-          {!isOnly&&<button onClick={onRemove} style={{background:"transparent",border:"none",color:"#4a8a8a",cursor:"pointer",fontSize:15}}>&#10005;</button>}
+          {!isOnly&&<button onClick={() => { if (window.confirm("Are you sure you want to remove this pet? This cannot be undone.")) onRemove(); }} style={{background:"transparent",border:"none",color:"#4a8a8a",cursor:"pointer",fontSize:15}}>&#10005;</button>}
         </div>
       </div>
       {showArc&&arcs.length>0&&(
@@ -288,6 +290,9 @@ export default function App() {
   const [page,          setPage]           = useState(0);
   const [activeLetter,  setActiveLetter]   = useState("ALL");
 
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem("snb_authed") === "1");
+const [pwInput, setPwInput] = useState("");
+
   useEffect(()=>{dbLoad().then(d=>{setClients(d);setLoading(false);});}, []);
 
   const persist = u => { setClients(u); dbSave(u); };
@@ -358,6 +363,32 @@ export default function App() {
     l==="ALL"||active.some(c=>(c.name||"").toUpperCase().startsWith(l))
   );
 
+if (!authed) {
+  const check = () => {
+    if (pwInput === TEMP_PASSWORD) {
+      sessionStorage.setItem("snb_authed", "1");
+      setAuthed(true);
+    } else {
+      alert("Incorrect password.");
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0f0f", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
+      <img src={LOGO_SRC} alt="SNB" style={{ width: 100, height: 100, objectFit: "contain" }} />
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+        <input type="password" placeholder="Enter password" autoFocus value={pwInput} onChange={e => setPwInput(e.target.value)}
+          style={{ background: "#061414", border: "1px solid #0cc0df", borderRadius: 8, color: "#fff", fontSize: 14, padding: "10px 16px", outline: "none", fontFamily: "monospace", width: 220, textAlign: "center" }}
+          onKeyDown={e => e.key === "Enter" && check()} />
+        <button onClick={check}
+          style={{ background: "linear-gradient(135deg,#0cc0df,#4edee4)", border: "none", color: "#000", borderRadius: 8, padding: "8px 24px", cursor: "pointer", fontSize: 12, fontWeight: 800, fontFamily: "monospace", letterSpacing: 2 }}>
+          ENTER
+        </button>
+      </div>
+    </div>
+  );
+}
+  
   if (loading) return (
     <div style={{minHeight:"100vh",background:"#0a0f0f",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20}}>
       <img src={LOGO_SRC} alt="SNB" style={{width:130,height:130,objectFit:"contain"}} />
