@@ -24,7 +24,7 @@ async function dbLoad() {
   catch(e) { console.error(e); return []; }
 }
 async function dbSave(data) {
-  try { await setDoc(_ref, { list: data }); } catch(e) { console.error(e); }
+  try { await setDoc(_ref, { list: data }); } catch(e) { console.error(e); throw e; }
 }
 
 const TYPE_COLORS  = { FH: "#4edee4", MT: "#f0a500" };
@@ -58,6 +58,7 @@ function emptyPet(name) { return { id: Date.now() + Math.random(), name: name ||
 function emptyClient()  { return { id: Date.now(), name: "", phone: "", memberSince: "", pets: [emptyPet()] }; }
 const today = () => new Date().toISOString().slice(0, 10);
 const fmt   = (s) => (s || "").trim().toLowerCase();
+const fmtDateOnly = (s) => { if (!s) return ""; const [y,m,d] = s.split("-"); return (y&&m&&d) ? `${+m}/${+d}/${y}` : s; };
 
 const inp = {
   background: "#061414", border: "1px solid #1a3333", borderRadius: 8,
@@ -295,7 +296,11 @@ const [pwInput, setPwInput] = useState("");
 
   useEffect(()=>{dbLoad().then(d=>{setClients(d);setLoading(false);});}, []);
 
-  const persist = u => { setClients(u); dbSave(u); };
+  const persist = async u => {
+    setClients(u);
+    try { await dbSave(u); }
+    catch(e) { console.error(e); alert("Failed to save changes. Please check your connection and try again."); }
+  };
 
   const addClient = () => {
     if (!newName.trim()) return;
@@ -494,7 +499,7 @@ if (!authed) {
                         </div>
                         <div style={{fontSize:13,color:"#5a9a9a",fontFamily:"monospace",marginTop:2}}>
                           {c.phone||"No phone"} &#183; {c.pets.length} pet{c.pets.length!==1?"s":""}{c.pets.some(p=>p.name)?": "+c.pets.map(p=>p.name||"?").join(", "):""}
-                          {ms&&<span style={{marginLeft:6,color:"#3a7070"}}>&#183; since {new Date(ms).toLocaleDateString()}</span>}
+                          {ms&&<span style={{marginLeft:6,color:"#3a7070"}}>&#183; since {fmtDateOnly(ms)}</span>}
                         </div>
                       </div>
                       <div style={{textAlign:"right",flexShrink:0}}>
