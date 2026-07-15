@@ -23,8 +23,42 @@ async function dbLoad() {
   try { const snap = await getDoc(_ref); return snap.exists() ? (snap.data().list || []) : []; }
   catch(e) { console.error(e); return []; }
 }
+
+// Walks the outgoing data and returns dotted/bracket paths (rooted at "clients")
+// of every value that is exactly undefined, e.g. "clients[12].pets[1].breed".
+function findUndefinedPaths(data, path = "clients") {
+  if (data === undefined) return [path];
+  if (data === null || typeof data !== "object" || data instanceof Date) return [];
+  if (Array.isArray(data)) {
+    return data.flatMap((item, i) => findUndefinedPaths(item, `${path}[${i}]`));
+  }
+  return Object.keys(data).flatMap(key => findUndefinedPaths(data[key], `${path}.${key}`));
+}
+
+// Returns a deep copy safe for Firestore: undefined object properties are
+// dropped, undefined array elements become null (indexes preserved), and the
+// original data is never mutated.
+function sanitizeForFirestore(data) {
+  if (data === undefined) return null;
+  if (data === null || typeof data !== "object" || data instanceof Date) return data;
+  if (Array.isArray(data)) return data.map(sanitizeForFirestore);
+  const out = {};
+  Object.keys(data).forEach(key => {
+    if (data[key] !== undefined) out[key] = sanitizeForFirestore(data[key]);
+  });
+  return out;
+}
+
 async function dbSave(data) {
-  try { await setDoc(_ref, { list: data }); } catch(e) { console.error(e); throw e; }
+  const undefinedPaths = findUndefinedPaths(data);
+  if (undefinedPaths.length > 0) {
+    console.warn(
+      "Firestore save: undefined value(s) found and will be sanitized before writing:\n" +
+      undefinedPaths.map(p => `${p} is undefined`).join("\n")
+    );
+  }
+  const sanitizedData = sanitizeForFirestore(data);
+  try { await setDoc(_ref, { list: sanitizedData }); } catch(e) { console.error(e); throw e; }
 }
 
 const TYPE_COLORS  = { FH: "#4edee4", MT: "#f0a500" };
