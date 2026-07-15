@@ -359,7 +359,11 @@ const [pwInput, setPwInput] = useState("");
     const hdr = ["Client Name","Phone","Member Since","Pet Name","Breed","Cycle","Baths","Bath 1","Bath 2","Bath 3","Free Bath","Grooms","Groom 1","Groom 2","Groom 3","Groom 4","Groom 5","Groom 6","Groom 7","Free Groom","Status"];
     const lines = [hdr.map(esc).join(",")];
     clients.filter(c=>!c.deleted).forEach(c=>{
-      (c.pets||[]).forEach(p=>{
+      const pets=c.pets||[];
+      if (pets.length===0) {
+        lines.push([c.name,c.phone,c.memberSince||"","","","","","","","","","","","","","","","","","","No Pets"].map(esc).join(","));
+      }
+      pets.forEach(p=>{
         const card=p.card||{};
         const arcs=card.archivedCycles||[];
         const tot=arcs.length+1;
